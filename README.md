@@ -1,8 +1,8 @@
-# lua-patengi - Yet another database adaptor for Lua
+# lua-patengi - Yet another database adapter for Lua
 
 ## 1. What?
 
-Patengi is a thin layer over other database adapters that makes them look the
+P&#257;tengi is a thin layer over other database adapters that makes them look the
 same.
 
 If the adapter lacks features, it fakes them.  (For the moment, this only
@@ -11,8 +11,8 @@ means that it fakes named parameters for pgsql).
 It can't fix the differences in SQL dialects, but it has a cheap macro (in
 the C sense) mechanism.
 
-Patengi is Maori for "database" (well, storehouse.  Database is really
-patengi raraunga, but that's a bit long)
+P&#257;tengi is M&#257;ori for "database" (well, storehouse.
+P&#257;tengi raraunga would be better but that's a bit long)
 
 
 ## 2. Why?
