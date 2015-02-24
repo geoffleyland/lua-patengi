@@ -16,10 +16,11 @@ addons:
   postgresql: "9.3"
 
 before_script:
-  - psql -c 'create database travis_ci_test;' -U postgres
+  - psql -c 'create database test;' -U postgres
 
 install:
   - sudo apt-get update -qq
+  - sudo apt-get install libpq-dev
   - sudo luarocks install busted 2.0.rc5-0
   - sudo luarocks install --server=http://rocks.moonscript.org/dev luapgsql
   - sudo luarocks install lsqlite3
