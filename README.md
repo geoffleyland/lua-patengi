@@ -1,5 +1,7 @@
 # lua-patengi - Yet another database adapter for Lua
 
+[![Build Status](https://travis-ci.org/geoffleyland/lua-patengi.svg?branch=master)](https://travis-ci.org/geoffleyland/lua-patengi)
+
 ## 1. What?
 
 P&#257;tengi is a thin layer over other database adapters that makes them look the
