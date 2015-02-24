@@ -3,11 +3,11 @@ language: c
 env:
   - LUA='Lua 5.1' DB="sqlite3"
   - LUA='Lua 5.1' DB="pgsql"
-#  - LUA='Lua 5.2' DB="sqlite3"
-#  - LUA='Lua 5.2' DB="pgsql"
+  - LUA='Lua 5.2' DB="sqlite3"
+  - LUA='Lua 5.2' DB="pgsql"
 #  - LUA='Lua 5.3' # busted depends on dkjson which doesn't (when I wrote this) support 5.3
-#  - LUA='LuaJIT'  DB="sqlite3"
-#  - LUA='LuaJIT'  DB="pgsql"
+  - LUA='LuaJIT'  DB="sqlite3"
+  - LUA='LuaJIT'  DB="pgsql"
 
 before_install:
   - bash .travis_setup.sh
