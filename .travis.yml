@@ -20,9 +20,8 @@ before_script:
 
 install:
   - sudo apt-get update -qq
-  - find / -name libpq-fe.h
   - sudo luarocks install busted 2.0.rc5-0
-  - sudo luarocks install --server=http://rocks.moonscript.org/dev luapgsql
+  - sudo luarocks install --server=http://rocks.moonscript.org/dev luapgsql PQ_DIR=/usr/local
   - sudo luarocks install lsqlite3
 
 script: busted --run=travis
