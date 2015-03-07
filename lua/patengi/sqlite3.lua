@@ -72,12 +72,25 @@ function statement:exec(...)
 end
 
 
+function statement:rows(...)
+  self._stmt:reset()
+  self:_bind(...)
+  return self._stmt:rows()
+end
+
+
 function statement:nrows(...)
   self._stmt:reset()
   self:_bind(...)
   return self._stmt:nrows()
 end
 
+
+function statement:urows(...)
+  self._stmt:reset()
+  self:_bind(...)
+  return self._stmt:urows()
+end
 
 ----------------------------------------------------------------------
 
