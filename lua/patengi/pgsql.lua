@@ -171,7 +171,7 @@ function statement:exec(...)
 end
 
 
-function statement:_nrows(...)
+function statement:_rows(result_fn, ...)
   self:_prep(...)
   local result = check_result(self._db:execPrepared(self._name, ...), self._sql)
 
@@ -181,14 +181,24 @@ function statement:_nrows(...)
   return function()
     i = i + 1
     if i <= lim then
-      return row_to_field_table(result, i)
+      return result_fn(result, i)
     end
   end
 end
 
-  
+
+function statement:rows(...)
+  return self:_rows(row_to_array_table, marshall_args(self._map, ...))
+end
+
+
 function statement:nrows(...)
-  return self:_nrows(marshall_args(self._map, ...))
+  return self:_rows(row_to_field_table, marshall_args(self._map, ...))
+end
+
+
+function statement:urows(...)
+  return self:_rows(row_to_multiple_return, marshall_args(self._map, ...))
 end
 
 
