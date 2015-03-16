@@ -20,7 +20,7 @@ before_script:
 
 install:
   - sudo apt-get update -qq
-  - sudo luarocks install busted 2.0.rc5-0
+  - sudo luarocks install busted 2.0.rc7-0
   - sudo luarocks install --server=http://rocks.moonscript.org/dev luapgsql PQ_INCDIR=/usr/include/postgresql PQ_LIBDIR=/usr/lib/x86_64-linux-gnu
   - sudo luarocks install lsqlite3
 
