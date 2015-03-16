@@ -16,6 +16,7 @@ describe("Database tests", function()
   it("should do some more tests", function()
       local db
       assert.has_no.errors(function() db = patengi.open(db_name) end)
+      assert.is.truthy(db)
       assert.has_no.errors(function() db:exec("CREATE TABLE test (name VARCHAR, number INTEGER);") end)
       local s1
       assert.has_no_errors(function() s1 = db:prepare("INSERT INTO test (name, number) VALUES (:name, :number)") end)
@@ -41,6 +42,8 @@ describe("Database tests", function()
         assert.are.equal(a[1], "number "..tostring(i))
         assert.are.equal(a[2], i)
       end
+      assert.has_no_errors(function() s2:exec(101) end)
+      assert.has_no_errors(function() s2:nexec(101) end)
+      assert.has_no_errors(function() s2:uexec(101) end)
   end)
-
 end)
