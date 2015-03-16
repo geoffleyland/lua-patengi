@@ -5,7 +5,7 @@ local pgsql = require"pgsql"
 
 local OK_STATUS =
 {
-  [pgsql.CONNECTION_OK]  = true,
+  [pgsql.CONNECTION_OK]     = true,
   [pgsql.PGRES_COMMAND_OK]  = true,
   [pgsql.PGRES_TUPLES_OK]   = true,
 }
@@ -115,7 +115,8 @@ end
 
 
 local function row_to_multiple_return(result, row)
-  return unpack(row_to_array_table(result, row))
+  local r = row_to_array_table(result, row)
+  if r then return unpack(r) end
 end
 
 
