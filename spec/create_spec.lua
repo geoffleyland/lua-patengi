@@ -24,6 +24,23 @@ describe("Database tests", function()
             s1:exec("number "..tostring(i), i)
           end
         end)
+
+      local s2
+      assert.has_no_errors(function() s2 = db:prepare("SELECT name, number FROM test WHERE number = :number") end)
+      for i = 1, 100 do
+        local name, number = s2:uexec(i)
+        assert.are.equal(name, "number "..tostring(i))
+        assert.are.equal(number, i)
+        local name, number = s2:uexec{number=i}
+        assert.are.equal(name, "number "..tostring(i))
+        assert.are.equal(number, i)
+        local t = s2:nexec(i)
+        assert.are.equal(t.name, "number "..tostring(i))
+        assert.are.equal(t.number, i)
+        local a = s2:exec(i)
+        assert.are.equal(a[1], "number "..tostring(i))
+        assert.are.equal(a[2], i)
+      end
   end)
 
 end)
