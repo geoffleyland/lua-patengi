@@ -104,6 +104,8 @@ end
 
 
 local function row_to_array_table(result, row)
+  if row > result:ntuples() then return end
+
   local t = {}
   for i = 1, result:nfields() do
     t[i] = get_value(result, row, i)
@@ -118,6 +120,8 @@ end
 
 
 local function row_to_field_table(result, row)
+  if row > result:ntuples() then return end
+
   local t = {}
   for i = 1, result:nfields() do
     t[result:fname(i)] = get_value(result, row, i)
@@ -159,15 +163,25 @@ function statement:_prep(...)
 end
 
 
-function statement:_exec(...)
+function statement:_exec(result_fn, ...)
   self:_prep(...)
-  return row_to_multiple_return(
+  return result_fn(
     check_result(self._db:execPrepared(self._name, ...), self._sql), 1)
 end
 
 
 function statement:exec(...)
-  return self:_exec(marshall_args(self._map, ...))
+  return self:_exec(row_to_array_table, marshall_args(self._map, ...))
+end
+
+
+function statement:nexec(...)
+  return self:_exec(row_to_field_table, marshall_args(self._map, ...))
+end
+
+
+function statement:uexec(...)
+  return self:_exec(row_to_multiple_return, marshall_args(self._map, ...))
 end
 
 

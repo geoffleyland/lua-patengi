@@ -62,38 +62,34 @@ function statement:_bind(arg1, ...)
 end
 
 
-function statement:exec(...)
+
+function statement:_exec(result_method, ...)
   self._stmt:reset()
   self:_bind(...)
-  self._stmt:step()
-  if self._stmt:columns() > 0 then
-    return self._stmt:get_uvalues()
+  if self._stmt:step() == sqlite3.ROW then
+    return self._stmt[result_method](self._stmt)
   end
 end
 
+function statement:exec(...)  return self:_exec("get_values", ...) end
+function statement:nexec(...) return self:_exec("get_named_values", ...) end
+function statement:uexec(...) return self:_exec("get_uvalues", ...) end
 
-function statement:rows(...)
+
+
+function statement:_rows(result_method, ...)
   self._stmt:reset()
   self:_bind(...)
-  return self._stmt:rows()
+  return self._stmt[result_method](self._stmt)
 end
 
 
-function statement:nrows(...)
-  self._stmt:reset()
-  self:_bind(...)
-  return self._stmt:nrows()
-end
+function statement:rows(...)  return self:_rows("rows", ...) end
+function statement:nrows(...) return self:_rows("nrows", ...) end
+function statement:urows(...) return self:_rows("urows", ...) end
 
-
-function statement:urows(...)
-  self._stmt:reset()
-  self:_bind(...)
-  return self._stmt:urows()
-end
 
 ----------------------------------------------------------------------
-
 
 local thisdb = {}
 thisdb.__index = thisdb
