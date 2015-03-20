@@ -3,7 +3,7 @@ local patengi = require("patengi")
 local db_names =
 {
   sqlite3 = "sqlite3:test.db",
-  pgsql = "pgsql:dbname=test user=postgres",
+  pgsql = "pgsql:dbname=test user=geoff",
 }
 
 describe("Database tests", function()
@@ -26,8 +26,24 @@ describe("Database tests", function()
           end
         end)
 
+      local SQL = "SELECT name, number FROM test WHERE number = :number"
+      for i = 1, 100 do
+        local name, number = db:uexec(SQL, i)
+        assert.are.equal(name, "number "..tostring(i))
+        assert.are.equal(number, i)
+        local name, number = db:uexec(SQL, {number=i})
+        assert.are.equal(name, "number "..tostring(i))
+        assert.are.equal(number, i)
+        local t = db:nexec(SQL, i)
+        assert.are.equal(t.name, "number "..tostring(i))
+        assert.are.equal(t.number, i)
+        local a = db:exec(SQL, i)
+        assert.are.equal(a[1], "number "..tostring(i))
+        assert.are.equal(a[2], i)
+      end
+
       local s2
-      assert.has_no_errors(function() s2 = db:prepare("SELECT name, number FROM test WHERE number = :number") end)
+      assert.has_no_errors(function() s2 = db:prepare(SQL) end)
       for i = 1, 100 do
         local name, number = s2:uexec(i)
         assert.are.equal(name, "number "..tostring(i))

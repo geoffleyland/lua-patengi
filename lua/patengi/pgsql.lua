@@ -102,8 +102,10 @@ local function marshall_args(map, arg1, ...)
   end
 end
 
+------------------------------------------------------------------------------
 
-local function row_to_array_table(result, row)
+
+local function array_rows(result, row)
   if row > result:ntuples() then return end
 
   local t = {}
@@ -114,13 +116,13 @@ local function row_to_array_table(result, row)
 end
 
 
-local function row_to_multiple_return(result, row)
-  local r = row_to_array_table(result, row)
+local function return_rows(result, row)
+  local r = array_rows(result, row)
   if r then return unpack(r) end
 end
 
 
-local function row_to_field_table(result, row)
+local function name_rows(result, row)
   if row > result:ntuples() then return end
 
   local t = {}
@@ -128,6 +130,20 @@ local function row_to_field_table(result, row)
     t[result:fname(i)] = get_value(result, row, i)
   end
   return t
+end
+
+
+local function row_iteraor(result, result_fn, sql)
+  check_result(result, sql)
+  local i = 0
+  local lim = result:ntuples()
+
+  return function()
+    i = i + 1
+    if i <= lim then
+      return result_fn(result, i)
+    end
+  end
 end
 
 
@@ -164,57 +180,33 @@ function statement:_prep(...)
 end
 
 
-function statement:_exec(result_fn, ...)
+function statement:__exec(result_fn, ...)
   self:_prep(...)
   return result_fn(
     check_result(self._db:execPrepared(self._name, ...), self._sql), 1)
 end
 
-
-function statement:exec(...)
-  return self:_exec(row_to_array_table, marshall_args(self._map, ...))
+function statement:_exec(result_fn, ...)
+  return self:__exec(result_fn, marshall_args(self._map, ...))
 end
 
+function statement:exec(...)  return self:_exec(array_rows, ...) end
+function statement:nexec(...) return self:_exec(name_rows, ...) end
+function statement:uexec(...) return self:_exec(return_rows, ...) end
 
-function statement:nexec(...)
-  return self:_exec(row_to_field_table, marshall_args(self._map, ...))
+
+function statement:__rows(result_fn, ...)
+  self:_prep(...)
+  return row_iterator(self._db:execPrepared(self._name, ...), result_fn, self._sql)
 end
-
-
-function statement:uexec(...)
-  return self:_exec(row_to_multiple_return, marshall_args(self._map, ...))
-end
-
 
 function statement:_rows(result_fn, ...)
-  self:_prep(...)
-  local result = check_result(self._db:execPrepared(self._name, ...), self._sql)
-
-  local i = 0
-  local lim = result:ntuples()
-
-  return function()
-    i = i + 1
-    if i <= lim then
-      return result_fn(result, i)
-    end
-  end
+  return self:__rows(result_fn, marshall_args(self._map, ...))
 end
 
-
-function statement:rows(...)
-  return self:_rows(row_to_array_table, marshall_args(self._map, ...))
-end
-
-
-function statement:nrows(...)
-  return self:_rows(row_to_field_table, marshall_args(self._map, ...))
-end
-
-
-function statement:urows(...)
-  return self:_rows(row_to_multiple_return, marshall_args(self._map, ...))
-end
+function statement:rows(...)  return self:_rows(array_rows, ...) end
+function statement:nrows(...) return self:_rows(name_rows, ...) end
+function statement:urows(...) return self:_rows(return_rows, ...) end
 
 
 ------------------------------------------------------------------------------
@@ -228,28 +220,45 @@ function thisdb:type()
 end
 
 
-function thisdb:_exec(sql, arg1, ...)
-  if arg1 then
-    return row_to_multiple_return(
-      check_result(self._db:execParams(sql, arg1, ...), sql), 1)
-  else
-    return row_to_multiple_return(
-      check_result(self._db:exec(sql), sql), 1)
-  end
-end
-
-
-function thisdb:exec(sql, ...)
-  local map
-  sql, map = translate_args(sql)
-
-  return self:_exec(sql, marshall_args(map, ...))
-end
-
-
 function thisdb:prepare(sql)
   return statement:new(self._db, sql)
 end
+
+
+function thisdb:__exec(sql, result_fn, arg1, ...)
+  if arg1 then
+    return result_fn(check_result(self._db:execParams(sql, arg1, ...), sql), 1)
+  else
+    return result_fn(check_result(self._db:exec(sql), sql), 1)
+  end
+end
+
+function thisdb:_exec(sql, result_fn, ...)
+  local tsql, map = translate_args(sql)
+  return self:__exec(tsql, result_fn, marshall_args(map, ...))
+end
+
+function thisdb:exec(sql, ...)  return self:_exec(sql, array_rows, ...) end
+function thisdb:nexec(sql, ...) return self:_exec(sql, name_rows, ...) end
+function thisdb:uexec(sql, ...) return self:_exec(sql, return_rows, ...) end
+
+
+function thisdb:__rows(sql, result_fn, arg1, ...)
+  if arg1 then
+    return row_iterator(self._db:execParams(sql, arg1, ...), result_fn, sql)
+  else
+    return row_iterator(self._db:exec(sql), result_fn, sql)
+  end
+end
+
+function thisdb:_rows(sql, result_fn, ...)
+  local tsql, map = translate_args(sql)
+  return self:__rows(tsql, result_fn, marshall_args(map, ...))
+end
+
+function thisdb:rows(sql, ...)  return self:_rows(sql, array_rows, ...) end
+function thisdb:nrows(sql, ...) return self:_rows(sql, name_rows, ...) end
+function thisdb:urows(sql, ...) return self:_rows(sql, return_rows, ...) end
 
 
 function thisdb:close()

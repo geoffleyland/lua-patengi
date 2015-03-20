@@ -83,7 +83,6 @@ function statement:_rows(result_method, ...)
   return self._stmt[result_method](self._stmt)
 end
 
-
 function statement:rows(...)  return self:_rows("rows", ...) end
 function statement:nrows(...) return self:_rows("nrows", ...) end
 function statement:urows(...) return self:_rows("urows", ...) end
@@ -105,14 +104,29 @@ function thisdb:error(sql)
 end
 
 
-function thisdb:exec(sql)
-  local result = check_result(self._db:exec(sql), self._db, sql)
-end
-
-
 function thisdb:prepare(sql)
   return statement:new(self._db, sql)
 end
+
+
+function thisdb:exec(sql, ...)  return self:prepare(sql):exec(...) end
+function thisdb:nexec(sql, ...) return self:prepare(sql):nexec(...) end
+function thisdb:uexec(sql, ...) return self:prepare(sql):uexec(...) end
+
+
+
+function thisdb:_rows(sql, result_method, arg1, ...)
+  if arg1 then
+    local S = self:prepare(sql)
+    return S[result_method](S, arg1, ...)
+  else
+    return self._db[result_method](self._db, sql)
+  end
+end
+
+function thisdb:rows(sql, ...)  return self:_rows(sql, "rows", ...) end
+function thisdb:nrows(sql, ...) return self:_rows(sql, "nrows", ...) end
+function thisdb:urows(sql, ...) return self:_rows(sql, "urows", ...) end
 
 
 function thisdb:close()
