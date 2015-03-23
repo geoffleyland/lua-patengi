@@ -133,7 +133,7 @@ local function name_rows(result, row)
 end
 
 
-local function row_iteraor(result, result_fn, sql)
+local function row_iterator(result, result_fn, sql)
   check_result(result, sql)
   local i = 0
   local lim = result:ntuples()
