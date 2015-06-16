@@ -56,7 +56,7 @@ local function translate(sql)
   while true do
     local part, quote
     part, quote, rest = rest:match("([^\"\']*)([\"\']?)(.*)")
-    part = part:gsub("[$:](%a[%w_]*)", function(name)
+    part = part:gsub("[$:]([%w_]+)", function(name)
         if name:match("^%d+$") then
           return "$"..name
         else

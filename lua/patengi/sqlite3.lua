@@ -22,7 +22,7 @@ local function translate(sql)
   while true do
     local part, quote
     part, quote, rest = rest:match("([^\"\']*)([\"\']?)(.*)")
-    part = part:gsub("[$:](%a[%w_]*)", function(name) return ":"..name end)
+    part = part:gsub("[$:]([%w_]+)", function(name) return ":"..name end)
     newsql[#newsql+1] = part
     if quote == "" then break end
     newsql[#newsql+1] = quote
