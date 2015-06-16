@@ -1,4 +1,5 @@
 local sqlite3 = require"lsqlite3"
+local pttranslate = require("patengi.translations").translate
 
 
 ----------------------------------------------------------------------
@@ -15,8 +16,8 @@ local function check_result(result, db, sql)
 end
 
 
-local function translate_args(sql)
-  local rest = sql
+local function translate(sql)
+  local rest = pttranslate(sql, "sqlite3")
   local newsql = {}
   while true do
     local part, quote
@@ -41,7 +42,7 @@ statement.__index = statement
 
 
 function statement:new(db, sql)
-  sql = translate_args(sql)
+  sql = translate(sql)
   local stmt = check_result(db:prepare(sql), db, sql)
 
   return setmetatable({ _db = db, _sql = sql, _stmt = stmt }, statement)
@@ -134,7 +135,7 @@ function thisdb:close()
 end
 
 
-return 
+return
 {
   open = function(...)
       return setmetatable({ _db=sqlite3.open(...) }, thisdb)

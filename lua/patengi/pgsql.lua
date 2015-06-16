@@ -1,4 +1,5 @@
 local pgsql = require"pgsql"
+local pttranslate = require("patengi.translations").translate
 
 
 ------------------------------------------------------------------------------
@@ -48,9 +49,9 @@ local function get_value(result, row, column)
 end
 
 
-local function translate_args(sql)
+local function translate(sql)
   local map
-  local rest = sql
+  local rest = pttranslate(sql, "pgsql")
   local newsql = {}
   while true do
     local part, quote
@@ -155,7 +156,7 @@ statement.__index = statement
 local statement_count = 0
 function statement:new(db, sql)
   local map
-  sql, map = translate_args(sql)
+  sql, map = translate(sql)
 
   statement_count = statement_count + 1
   local name = "statement:"..tostring(statement_count)
@@ -234,7 +235,7 @@ function thisdb:__exec(sql, result_fn, arg1, ...)
 end
 
 function thisdb:_exec(sql, result_fn, ...)
-  local tsql, map = translate_args(sql)
+  local tsql, map = translate(sql)
   return self:__exec(tsql, result_fn, marshall_args(map, ...))
 end
 
@@ -252,7 +253,7 @@ function thisdb:__rows(sql, result_fn, arg1, ...)
 end
 
 function thisdb:_rows(sql, result_fn, ...)
-  local tsql, map = translate_args(sql)
+  local tsql, map = translate(sql)
   return self:__rows(tsql, result_fn, marshall_args(map, ...))
 end
 
@@ -268,7 +269,7 @@ end
 
 ------------------------------------------------------------------------------
 
-return 
+return
 {
   open = function(...)
       local db = pgsql.connectdb(...)

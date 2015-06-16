@@ -1,11 +1,12 @@
 return
 {
   open = function(arg1, ...)
-      local db, a1 = arg1:match("(%w+):?(.*)")
-      if a1 == "" then
-        return require("patengi."..db).open(...)
+      local db_module
+      if arg1:match("postgres:") then
+        db_module = require("patengi.pgsql")
       else
-        return require("patengi."..db).open(a1, ...)
+        db_module = require("patengi.sqlite3")
       end
+      return db_module.open(arg1, ...)
     end
 }
