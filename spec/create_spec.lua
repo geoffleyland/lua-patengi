@@ -2,8 +2,8 @@ local patengi = require("patengi")
 
 local db_names =
 {
-  sqlite3 = "sqlite3:test.db",
-  pgsql = "pgsql:dbname=test user=postgres",
+  sqlite3 = "test.db",
+  pgsql = "dbname=test user=postgres",
 }
 
 describe("Database tests", function()
