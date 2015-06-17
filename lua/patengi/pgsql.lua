@@ -105,32 +105,40 @@ end
 
 ------------------------------------------------------------------------------
 
-
-local function array_rows(result, row)
-  if row > result:ntuples() then return end
-
+local function array_rows(result, row, nfields)
   local t = {}
-  for i = 1, result:nfields() do
+  for i = 1, nfields do
     t[i] = get_value(result, row, i)
   end
   return t
 end
 
-
-local function return_rows(result, row)
-  local r = array_rows(result, row)
-  if r then return unpack(r) end
+-- This implementation creates no tables, but multiple return values
+-- might make it slow.  I haven't tested.
+local function return_rows(result, row, i, ...)
+  local v = get_value(result, row, i)
+  if i == 1 then
+    return v, ...
+  else
+    return return_rows(result, row, i-1), v, ...
+  end
 end
 
 
-local function name_rows(result, row)
-  if row > result:ntuples() then return end
-
+local function name_rows(result, row, nfields)
   local t = {}
-  for i = 1, result:nfields() do
+  for i = 1, nfields do
     t[result:fname(i)] = get_value(result, row, i)
   end
   return t
+end
+
+
+local function first_row(result, result_fn, sql)
+  check_result(result, sql)
+  if result:ntuples() > 0 then
+    return result_fn(result, 1, result:nfields())
+  end
 end
 
 
@@ -138,11 +146,12 @@ local function row_iterator(result, result_fn, sql)
   check_result(result, sql)
   local i = 0
   local lim = result:ntuples()
+  local nfields = result:nfields()
 
   return function()
     i = i + 1
     if i <= lim then
-      return result_fn(result, i)
+      return result_fn(result, i, nfields)
     end
   end
 end
@@ -161,7 +170,8 @@ function statement:new(db, sql)
   statement_count = statement_count + 1
   local name = "statement:"..tostring(statement_count)
 
-  return setmetatable({ _db = db, _sql = sql, _name = name, _map = map }, statement)
+  return setmetatable(
+    { _db = db, _sql = sql, _name = name, _map = map }, statement)
 end
 
 
@@ -175,7 +185,9 @@ function statement:_prep(...)
         types[i] = v
       end
     end
-    check_result(self._db:prepare(self._name, self._sql, unpack(types, 1, arg_count)), self._sql)
+    check_result(
+      self._db:prepare(self._name, self._sql, unpack(types, 1, arg_count)),
+      self._sql)
     self._prepped = true
   end
 end
@@ -183,8 +195,8 @@ end
 
 function statement:__exec(result_fn, ...)
   self:_prep(...)
-  return result_fn(
-    check_result(self._db:execPrepared(self._name, ...), self._sql), 1)
+  return first_row(
+    self._db:execPrepared(self._name, ...), result_fn, self._sql)
 end
 
 function statement:_exec(result_fn, ...)
@@ -227,11 +239,9 @@ end
 
 
 function thisdb:__exec(sql, result_fn, arg1, ...)
-  if arg1 then
-    return result_fn(check_result(self._db:execParams(sql, arg1, ...), sql), 1)
-  else
-    return result_fn(check_result(self._db:exec(sql), sql), 1)
-  end
+  local result = arg1 and self._db:execParams(sql, arg1, ...) or
+                          self._db:exec(sql)
+  return first_row(result, result_fn, sql)
 end
 
 function thisdb:_exec(sql, result_fn, ...)
@@ -245,11 +255,9 @@ function thisdb:uexec(sql, ...) return self:_exec(sql, return_rows, ...) end
 
 
 function thisdb:__rows(sql, result_fn, arg1, ...)
-  if arg1 then
-    return row_iterator(self._db:execParams(sql, arg1, ...), result_fn, sql)
-  else
-    return row_iterator(self._db:exec(sql), result_fn, sql)
-  end
+  local result = arg1 and self._db:execParams(sql, arg1, ...) or
+                          self._db:exec(sql)
+  return row_iterator(result, result_fn, sql)
 end
 
 function thisdb:_rows(sql, result_fn, ...)
