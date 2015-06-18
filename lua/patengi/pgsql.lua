@@ -120,7 +120,7 @@ local function return_rows(result, row, i, ...)
   if i == 1 then
     return v, ...
   else
-    return return_rows(result, row, i-1), v, ...
+    return return_rows(result, row, i-1, v, ...)
   end
 end
 
