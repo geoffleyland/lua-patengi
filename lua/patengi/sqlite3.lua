@@ -89,7 +89,7 @@ function statement:nrows(...) return self:_rows("nrows", ...) end
 function statement:urows(...) return self:_rows("urows", ...) end
 
 
-----------------------------------------------------------------------
+------------------------------------------------------------------------------
 
 local thisdb = {}
 thisdb.__index = thisdb
@@ -97,6 +97,16 @@ thisdb.__index = thisdb
 
 function thisdb:type()
   return "sqlite3"
+end
+
+
+function thisdb:close()
+  self._db:close()
+end
+
+
+function thisdb:last_insert_id()
+  return self:uexec("SELECT last_insert_rowid();")
 end
 
 
@@ -115,7 +125,6 @@ function thisdb:nexec(sql, ...) return self:prepare(sql):nexec(...) end
 function thisdb:uexec(sql, ...) return self:prepare(sql):uexec(...) end
 
 
-
 function thisdb:_rows(sql, result_method, arg1, ...)
   if arg1 then
     local S = self:prepare(sql)
@@ -129,11 +138,7 @@ function thisdb:rows(sql, ...)  return self:_rows(sql, "rows", ...) end
 function thisdb:nrows(sql, ...) return self:_rows(sql, "nrows", ...) end
 function thisdb:urows(sql, ...) return self:_rows(sql, "urows", ...) end
 
-
-function thisdb:close()
-  self._db:close()
-end
-
+------------------------------------------------------------------------------
 
 return
 {
@@ -141,3 +146,5 @@ return
       return setmetatable({ _db=sqlite3.open(...) }, thisdb)
     end,
 }
+
+------------------------------------------------------------------------------

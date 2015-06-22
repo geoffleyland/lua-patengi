@@ -233,6 +233,16 @@ function thisdb:type()
 end
 
 
+function thisdb:close()
+  self._db:finish()
+end
+
+
+function thisdb:last_insert_id()
+  return self:uexec("SELECT LASTVAL();")
+end
+
+
 function thisdb:prepare(sql)
   return statement:new(self._db, sql)
 end
@@ -270,11 +280,6 @@ function thisdb:nrows(sql, ...) return self:_rows(sql, name_rows, ...) end
 function thisdb:urows(sql, ...) return self:_rows(sql, return_rows, ...) end
 
 
-function thisdb:close()
-  self._db:finish()
-end
-
-
 ------------------------------------------------------------------------------
 
 return
@@ -288,6 +293,4 @@ return
     end,
 }
 
-
 ------------------------------------------------------------------------------
-
