@@ -4,9 +4,16 @@ local pttranslate = require("patengi.translations").translate
 
 ----------------------------------------------------------------------
 
+local OK_RESULTS =
+{
+  [sqlite3.OK]      = true,
+  [sqlite3.ROW]     = true,
+  [sqlite3.DONE]    = true,
+}
+
 local function check_result(result, db, sql)
-  if result == nil or (type(result) == "number" and result ~= sqlite3.OK) then
-    local message = ("SQL error: %s"):format(db:error_message())
+  if result == nil or (type(result) == "number" and not OK_RESULTS[result]) then
+    local message = ("SQL error %s: %s"):format(tostring(result), db:error_message())
     if sql then
       message = message..("\nwhile executing:\n%s\n"):format(sql:gsub("^", "  "))
     end
@@ -49,25 +56,29 @@ function statement:new(db, sql)
 end
 
 
+function statement:check(result)
+  return check_result(result, self._db, self._sql)
+end
+
+
 function statement:_bind(arg1, ...)
   local arg_count = select("#", ...)
   if type(arg1) == "table" and arg_count == 0 then
     if arg1[1] then  -- guess they've passed in an "array" of arguments
-      self._stmt:bind_values(unpack(arg1))
+      self:check(self._stmt:bind_values(unpack(arg1)))
     else -- guess they've passed in table of named args
-      self._stmt:bind_names(arg1)
+      self:check(self._stmt:bind_names(arg1))
     end
   elseif arg1 ~= nil or arg_count ~= 0 then
-    self._stmt:bind_values(arg1, ...)
+    self:check(self._stmt:bind_values(arg1, ...))
   end
 end
 
 
-
 function statement:_exec(result_method, ...)
-  self._stmt:reset()
+  self:check(self._stmt:reset())
   self:_bind(...)
-  if self._stmt:step() == sqlite3.ROW then
+  if self:check(self._stmt:step()) == sqlite3.ROW then
     return self._stmt[result_method](self._stmt)
   end
 end
@@ -79,7 +90,7 @@ function statement:uexec(...) return self:_exec("get_uvalues", ...) end
 
 
 function statement:_rows(result_method, ...)
-  self._stmt:reset()
+  self:check(self._stmt:reset())
   self:_bind(...)
   return self._stmt[result_method](self._stmt)
 end
