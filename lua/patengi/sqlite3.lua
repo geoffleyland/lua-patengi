@@ -149,12 +149,13 @@ function thisdb:rows(sql, ...)  return self:_rows(sql, "rows", ...) end
 function thisdb:nrows(sql, ...) return self:_rows(sql, "nrows", ...) end
 function thisdb:urows(sql, ...) return self:_rows(sql, "urows", ...) end
 
+
 ------------------------------------------------------------------------------
 
 return
 {
   open = function(...)
-      return setmetatable({ _db=sqlite3.open(...) }, thisdb)
+      return setmetatable({ _db=assert(sqlite3.open(...))}, thisdb)
     end,
 }
 
