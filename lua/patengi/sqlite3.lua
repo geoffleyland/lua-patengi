@@ -129,7 +129,7 @@ end
 
 
 function thisdb:begin()
-  return self:exec("COMMIT")
+  return self:exec("BEGIN")
 end
 
 
