@@ -50,9 +50,11 @@ statement.__index = statement
 
 function statement:new(db, sql)
   sql = translate(sql)
-  local stmt = check_result(db:prepare(sql), db, sql)
+  local stmt = check_result(db._db:prepare(sql), db._db, sql)
 
-  return setmetatable({ _db = db, _sql = sql, _stmt = stmt }, statement)
+  local s = setmetatable({ _db = db._db, _sql = sql, _stmt = stmt }, statement)
+  db:_track_statement(s)
+  return s
 end
 
 
@@ -121,13 +123,34 @@ function thisdb:last_insert_id()
 end
 
 
+function thisdb:_track_statement(s)
+  self.statements[#self.statements+1] = s
+end
+
+
+function thisdb:begin()
+  return self:exec("COMMIT")
+end
+
+
+-- It seems like a good idea to clear out any unfinished statements on
+-- a commit.  There's probably a better way to do this.
+function thisdb:commit()
+  for _, s in ipairs(self.statements) do
+    s._stmt:finalize()
+  end
+  self.statements = {}
+  return self:exec("COMMIT")
+end
+
+
 function thisdb:error(sql)
   error(("SQL error: %s\nwhile executing:\n%s\n"):format(self._db:error_message(), sql:gsub("^", "  ")))
 end
 
 
 function thisdb:prepare(sql)
-  return statement:new(self._db, sql)
+  return statement:new(self, sql)
 end
 
 
@@ -155,7 +178,7 @@ function thisdb:urows(sql, ...) return self:_rows(sql, "urows", ...) end
 return
 {
   open = function(...)
-      return setmetatable({ _db=assert(sqlite3.open(...))}, thisdb)
+      return setmetatable({ _db=assert(sqlite3.open(...)), statements = {}}, thisdb)
     end,
 }
 

@@ -243,6 +243,16 @@ function thisdb:last_insert_id()
 end
 
 
+function thisdb:begin()
+  return self:exec("BEGIN")
+end
+
+
+function thisdb:commit()
+  return self:exec("COMMIT")
+end
+
+
 function thisdb:prepare(sql)
   return statement:new(self._db, sql)
 end
